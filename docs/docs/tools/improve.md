@@ -82,7 +82,7 @@ the tool can automatically approve the PR when the user checks the self-review c
 #### Extra instructions
 You can use the `extra_instructions` configuration option to give the AI model additional instructions for the `improve` tool.
 Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify relevant aspects that you want the model to focus on.
-    
+
 Examples for possible instructions:
 ```
 [pr_code_suggestions]
@@ -96,11 +96,11 @@ extra_instructions="""\
 Use triple quotes to write multi-line instructions. Use bullet points or numbers to make the instructions more readable.
 
 #### Best practices 💎
-Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Khulnasoft/pr-assistant/wiki) called `best_practices.md`. 
+Another option to give additional guidance to the AI model is by creating a dedicated [**wiki page**](https://github.com/Khulnasoft/pr-assistant/wiki) called `best_practices.md`.
 This page can contain a list of best practices, coding standards, and guidelines that are specific to your repo/organization
 
 The AI model will use this page as a reference, and in case the PR code violates any of the guidelines, it will suggest improvements accordingly, with a dedicated label: `Organization
-best practice`. 
+best practice`.
 
 Example for a `best_practices.md` content can be found [here](https://github.com/Khulnasoft/pr-assistant/blob/main/docs/docs/usage-guide/EXAMPLE_BEST_PRACTICE.md) (adapted from Google's [pyguide](https://google.github.io/styleguide/pyguide.html)).
 This file is only an example. Since it is used as a prompt for an AI model, we want to emphasize the following:
@@ -194,6 +194,6 @@ Using a combination of both can help the AI model to provide relevant and tailor
     - Only if the `Category` header is relevant, the user should move to the summarized suggestion description
     - Only if the summarized suggestion description is relevant, the user should click on the collapsible, to read the full suggestion description with a code preview example.
 
-In addition, we recommend to use the `extra_instructions` field to guide the model to suggestions that are more relevant to the specific needs of the project. 
+In addition, we recommend to use the `extra_instructions` field to guide the model to suggestions that are more relevant to the specific needs of the project.
 <br>
 Consider also trying the [Custom Prompt Tool](./custom_prompt.md) 💎, that will **only** propose code suggestions that follow specific guidelines defined by user.

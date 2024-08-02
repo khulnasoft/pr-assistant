@@ -1,4 +1,7 @@
-from pr_assistant.identity_providers.identity_provider import Eligibility, IdentityProvider
+from pr_assistant.identity_providers.identity_provider import (
+    Eligibility,
+    IdentityProvider,
+)
 
 
 class DefaultIdentityProvider(IdentityProvider):

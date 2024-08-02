@@ -17,15 +17,17 @@ from starlette_context import context
 
 from pr_assistant.algo import MAX_TOKENS
 from pr_assistant.algo.token_handler import TokenEncoder
-from pr_assistant.config_loader import get_settings, global_settings
 from pr_assistant.algo.types import FilePatchInfo
+from pr_assistant.config_loader import get_settings, global_settings
 from pr_assistant.log import get_logger
+
 
 class Range(BaseModel):
     line_start: int  # should be 0-indexed
     line_end: int
     column_start: int = -1
     column_end: int = -1
+
 
 class ModelType(str, Enum):
     REGULAR = "regular"
@@ -55,14 +57,21 @@ def emphasize_header(text: str, only_markdown=False, reference_link=None) -> str
             # Everything before the colon (inclusive) is wrapped in <strong> tags
             if only_markdown:
                 if reference_link:
-                    transformed_string = f"[**{text[:colon_position + 1]}**]({reference_link})\n" + text[colon_position + 1:]
+                    transformed_string = (
+                        f"[**{text[:colon_position + 1]}**]({reference_link})\n" + text[colon_position + 1 :]
+                    )
                 else:
-                    transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1:]
+                    transformed_string = f"**{text[:colon_position + 1]}**\n" + text[colon_position + 1 :]
             else:
                 if reference_link:
-                    transformed_string = f"<strong><a href='{reference_link}'>{text[:colon_position + 1]}</a></strong><br>" + text[colon_position + 1:]
+                    transformed_string = (
+                        f"<strong><a href='{reference_link}'>{text[:colon_position + 1]}</a></strong><br>"
+                        + text[colon_position + 1 :]
+                    )
                 else:
-                    transformed_string = "<strong>" + text[:colon_position + 1] + "</strong>" +'<br>' + text[colon_position + 1:]
+                    transformed_string = (
+                        "<strong>" + text[: colon_position + 1] + "</strong>" + "<br>" + text[colon_position + 1 :]
+                    )
         else:
             # If there's no ": ", return the original string
             transformed_string = text
@@ -84,10 +93,13 @@ def unique_strings(input_list: List[str]) -> List[str]:
             seen.add(item)
     return unique_list
 
-def convert_to_markdown_v2(output_data: dict,
-                           gfm_supported: bool = True,
-                           incremental_review=None,
-                           git_provider=None) -> str:
+
+def convert_to_markdown_v2(
+    output_data: dict,
+    gfm_supported: bool = True,
+    incremental_review=None,
+    git_provider=None,
+) -> str:
     """
     Convert a dictionary of data into markdown format.
     Args:
@@ -115,30 +127,30 @@ def convert_to_markdown_v2(output_data: dict,
     else:
         markdown_text += f"{PRReviewHeader.INCREMENTAL.value} 🔍\n\n"
         markdown_text += f"⏮️ Review for commits since previous PR-Assistant review {incremental_review}.\n\n"
-    if not output_data or not output_data.get('review', {}):
+    if not output_data or not output_data.get("review", {}):
         return ""
 
     if gfm_supported:
         markdown_text += "<table>\n"
 
-    for key, value in output_data['review'].items():
-        if value is None or value == '' or value == {} or value == []:
-            if key.lower() not in ['can_be_split', 'key_issues_to_review']:
+    for key, value in output_data["review"].items():
+        if value is None or value == "" or value == {} or value == []:
+            if key.lower() not in ["can_be_split", "key_issues_to_review"]:
                 continue
-        key_nice = key.replace('_', ' ').capitalize()
+        key_nice = key.replace("_", " ").capitalize()
         emoji = emojis.get(key_nice, "")
-        if 'Estimated effort to review' in key_nice:
-            key_nice = 'Estimated effort to review'
+        if "Estimated effort to review" in key_nice:
+            key_nice = "Estimated effort to review"
             value = str(value).strip()
             if value.isnumeric():
                 value_int = int(value)
             else:
                 try:
-                    value_int = int(value.split(',')[0])
+                    value_int = int(value.split(",")[0])
                 except ValueError:
                     continue
-            blue_bars = '🔵' * value_int
-            white_bars = '⚪' * (5 - value_int)
+            blue_bars = "🔵" * value_int
+            white_bars = "⚪" * (5 - value_int)
             value = f"{value_int} {blue_bars}{white_bars}"
             if gfm_supported:
                 markdown_text += f"<tr><td>"
@@ -146,7 +158,7 @@ def convert_to_markdown_v2(output_data: dict,
                 markdown_text += f"</td></tr>\n"
             else:
                 markdown_text += f"### {emoji} {key_nice}: {value}\n\n"
-        elif 'relevant tests' in key_nice.lower():
+        elif "relevant tests" in key_nice.lower():
             value = value.strip().lower()
             if gfm_supported:
                 markdown_text += f"<tr><td>"
@@ -157,10 +169,10 @@ def convert_to_markdown_v2(output_data: dict,
                 markdown_text += f"</td></tr>\n"
             else:
                 if is_value_no(value):
-                    markdown_text += f'### {emoji} No relevant tests\n\n'
+                    markdown_text += f"### {emoji} No relevant tests\n\n"
                 else:
                     markdown_text += f"### PR contains tests\n\n"
-        elif 'security concerns' in key_nice.lower():
+        elif "security concerns" in key_nice.lower():
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 if is_value_no(value):
@@ -172,17 +184,17 @@ def convert_to_markdown_v2(output_data: dict,
                 markdown_text += f"</td></tr>\n"
             else:
                 if is_value_no(value):
-                    markdown_text += f'### {emoji} No security concerns identified\n\n'
+                    markdown_text += f"### {emoji} No security concerns identified\n\n"
                 else:
                     markdown_text += f"### {emoji} Security concerns\n\n"
                     value = emphasize_header(value.strip())
                     markdown_text += f"{value}\n\n"
-        elif 'can be split' in key_nice.lower():
+        elif "can be split" in key_nice.lower():
             if gfm_supported:
                 markdown_text += f"<tr><td>"
                 markdown_text += process_can_be_split(emoji, value)
                 markdown_text += f"</td></tr>\n"
-        elif 'key issues to review' in key_nice.lower():
+        elif "key issues to review" in key_nice.lower():
             # value is a list of issues
             if is_value_no(value):
                 if gfm_supported:
@@ -193,7 +205,7 @@ def convert_to_markdown_v2(output_data: dict,
                     markdown_text += f"### {emoji} No key issues to review\n\n"
             else:
                 # issues = value.split('\n- ')
-                issues =value
+                issues = value
                 # for i, _ in enumerate(issues):
                 #     issues[i] = issues[i].strip().strip('-').strip()
                 if gfm_supported:
@@ -205,26 +217,36 @@ def convert_to_markdown_v2(output_data: dict,
                     try:
                         if not issue:
                             continue
-                        relevant_file = issue.get('relevant_file', '').strip()
-                        issue_header = issue.get('issue_header', '').strip()
-                        issue_content = issue.get('issue_content', '').strip()
-                        start_line = int(str(issue.get('start_line', 0)).strip())
-                        end_line = int(str(issue.get('end_line', 0)).strip())
+                        relevant_file = issue.get("relevant_file", "").strip()
+                        issue_header = issue.get("issue_header", "").strip()
+                        issue_content = issue.get("issue_content", "").strip()
+                        start_line = int(str(issue.get("start_line", 0)).strip())
+                        end_line = int(str(issue.get("end_line", 0)).strip())
                         reference_link = git_provider.get_line_link(relevant_file, start_line, end_line)
 
                         if gfm_supported:
                             if get_settings().pr_reviewer.extra_issue_links:
-                                issue_content_linked =copy.deepcopy(issue_content)
-                                referenced_variables_list = issue.get('referenced_variables', [])
+                                issue_content_linked = copy.deepcopy(issue_content)
+                                referenced_variables_list = issue.get("referenced_variables", [])
                                 for component in referenced_variables_list:
-                                    name = component['variable_name'].strip().strip('`')
+                                    name = component["variable_name"].strip().strip("`")
 
                                     ind = issue_content.find(name)
                                     if ind != -1:
-                                        reference_link_component = git_provider.get_line_link(relevant_file, component['relevant_line'], component['relevant_line'])
-                                        issue_content_linked = issue_content_linked[:ind-1] + f"[`{name}`]({reference_link_component})" + issue_content_linked[ind+len(name)+1:]
+                                        reference_link_component = git_provider.get_line_link(
+                                            relevant_file,
+                                            component["relevant_line"],
+                                            component["relevant_line"],
+                                        )
+                                        issue_content_linked = (
+                                            issue_content_linked[: ind - 1]
+                                            + f"[`{name}`]({reference_link_component})"
+                                            + issue_content_linked[ind + len(name) + 1 :]
+                                        )
                                     else:
-                                        get_logger().info(f"Failed to find variable in issue content: {component['variable_name'].strip()}")
+                                        get_logger().info(
+                                            f"Failed to find variable in issue content: {component['variable_name'].strip()}"
+                                        )
                                 issue_content = issue_content_linked
                             issue_str = f"<a href='{reference_link}'><strong>{issue_header}</strong></a><br>{issue_content}"
                         else:
@@ -245,19 +267,19 @@ def convert_to_markdown_v2(output_data: dict,
     if gfm_supported:
         markdown_text += "</table>\n"
 
-    if 'code_feedback' in output_data:
+    if "code_feedback" in output_data:
         if gfm_supported:
             markdown_text += f"\n\n"
             markdown_text += f"<details><summary> <strong>Code feedback:</strong></summary>\n\n"
             markdown_text += "<hr>"
         else:
             markdown_text += f"\n\n### Code feedback:\n\n"
-        for i, value in enumerate(output_data['code_feedback']):
-            if value is None or value == '' or value == {} or value == []:
+        for i, value in enumerate(output_data["code_feedback"]):
+            if value is None or value == "" or value == {} or value == []:
                 continue
-            markdown_text += parse_code_suggestion(value, i, gfm_supported)+"\n\n"
-        if markdown_text.endswith('<hr>'):
-            markdown_text= markdown_text[:-4]
+            markdown_text += parse_code_suggestion(value, i, gfm_supported) + "\n\n"
+        if markdown_text.endswith("<hr>"):
+            markdown_text = markdown_text[:-4]
         if gfm_supported:
             markdown_text += f"</details>"
 
@@ -277,8 +299,8 @@ def process_can_be_split(emoji, value):
         else:
             markdown_text += f"{emoji} <strong>{key_nice}</strong><br><br>\n\n"
             for i, split in enumerate(value):
-                title = split.get('title', '')
-                relevant_files = split.get('relevant_files', [])
+                title = split.get("title", "")
+                relevant_files = split.get("relevant_files", [])
                 markdown_text += f"<details><summary>\nSub-PR theme: <b>{title}</b></summary>\n\n"
                 markdown_text += f"___\n\nRelevant files:\n\n"
                 for file in relevant_files:
@@ -329,23 +351,25 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
         str: A string containing the markdown formatted text generated from the input dictionary.
     """
     markdown_text = ""
-    if gfm_supported and 'relevant_line' in code_suggestion:
-        markdown_text += '<table>'
+    if gfm_supported and "relevant_line" in code_suggestion:
+        markdown_text += "<table>"
         for sub_key, sub_value in code_suggestion.items():
             try:
-                if sub_key.lower() == 'relevant_file':
-                    relevant_file = sub_value.strip('`').strip('"').strip("'")
+                if sub_key.lower() == "relevant_file":
+                    relevant_file = sub_value.strip("`").strip('"').strip("'")
                     markdown_text += f"<tr><td>relevant file</td><td>{relevant_file}</td></tr>"
                     # continue
-                elif sub_key.lower() == 'suggestion':
-                    markdown_text += (f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>"
-                                      f"<td>\n\n<strong>\n\n{sub_value.strip()}\n\n</strong>\n</td></tr>")
-                elif sub_key.lower() == 'relevant_line':
+                elif sub_key.lower() == "suggestion":
+                    markdown_text += (
+                        f"<tr><td>{sub_key} &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</td>"
+                        f"<td>\n\n<strong>\n\n{sub_value.strip()}\n\n</strong>\n</td></tr>"
+                    )
+                elif sub_key.lower() == "relevant_line":
                     markdown_text += f"<tr><td>relevant line</td>"
-                    sub_value_list = sub_value.split('](')
-                    relevant_line = sub_value_list[0].lstrip('`').lstrip('[')
+                    sub_value_list = sub_value.split("](")
+                    relevant_line = sub_value_list[0].lstrip("`").lstrip("[")
                     if len(sub_value_list) > 1:
-                        link = sub_value_list[1].rstrip(')').strip('`')
+                        link = sub_value_list[1].rstrip(")").strip("`")
                         markdown_text += f"<td><a href='{link}'>{relevant_line}</a></td>"
                     else:
                         markdown_text += f"<td>{relevant_line}</td>"
@@ -353,19 +377,22 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
             except Exception as e:
                 get_logger().exception(f"Failed to parse code suggestion: {e}")
                 pass
-        markdown_text += '</table>'
+        markdown_text += "</table>"
         markdown_text += "<hr>"
     else:
         for sub_key, sub_value in code_suggestion.items():
             if isinstance(sub_key, str):
                 sub_key = sub_key.rstrip()
-            if isinstance(sub_value,str):
+            if isinstance(sub_value, str):
                 sub_value = sub_value.rstrip()
             if isinstance(sub_value, dict):  # "code example"
                 markdown_text += f"  - **{sub_key}:**\n"
-                for code_key, code_value in sub_value.items():  # 'before' and 'after' code
+                for (
+                    code_key,
+                    code_value,
+                ) in sub_value.items():  # 'before' and 'after' code
                     code_str = f"```\n{code_value}\n```"
-                    code_str_indented = textwrap.indent(code_str, '        ')
+                    code_str_indented = textwrap.indent(code_str, "        ")
                     markdown_text += f"    - **{code_key}:**\n{code_str_indented}\n"
             else:
                 if "relevant_file" in sub_key.lower():
@@ -374,7 +401,7 @@ def parse_code_suggestion(code_suggestion: dict, i: int = 0, gfm_supported: bool
                     markdown_text += f"   **{sub_key}:** {sub_value}  \n"
                 if "relevant_line" not in sub_key.lower():  # nicer presentation
                     # markdown_text = markdown_text.rstrip('\n') + "\\\n" # works for gitlab
-                    markdown_text = markdown_text.rstrip('\n') + "   \n"  # works for gitlab and bitbucker
+                    markdown_text = markdown_text.rstrip("\n") + "   \n"  # works for gitlab and bitbucker
 
         markdown_text += "\n"
     return markdown_text
@@ -415,8 +442,9 @@ def try_fix_json(review, max_iter=10, code_suggestions=False):
     else:
         closing_bracket = "]}}"
 
-    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or \
-            (review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0) :
+    if (review.rfind("'Code feedback': [") > 0 or review.rfind('"Code feedback": [') > 0) or (
+        review.rfind("'Code suggestions': [") > 0 or review.rfind('"Code suggestions": [') > 0
+    ):
         last_code_suggestion_ind = [m.end() for m in re.finditer(r"\}\s*,", review)][-1] - 1
         valid_json = False
         iter_count = 0
@@ -456,11 +484,11 @@ def fix_json_escape_char(json_message=None):
         result = json.loads(json_message)
     except Exception as e:
         # Find the offending character index:
-        idx_to_replace = int(str(e).split(' ')[-1].replace(')', ''))
+        idx_to_replace = int(str(e).split(" ")[-1].replace(")", ""))
         # Remove the offending character:
         json_message = list(json_message)
-        json_message[idx_to_replace] = ' '
-        new_message = ''.join(json_message)
+        json_message[idx_to_replace] = " "
+        new_message = "".join(json_message)
         return fix_json_escape_char(json_message=new_message)
     return result
 
@@ -479,11 +507,16 @@ def convert_str_to_datetime(date_str):
         >>> convert_str_to_datetime('Mon, 01 Jan 2022 12:00:00 UTC')
         datetime.datetime(2022, 1, 1, 12, 0, 0)
     """
-    datetime_format = '%a, %d %b %Y %H:%M:%S %Z'
+    datetime_format = "%a, %d %b %Y %H:%M:%S %Z"
     return datetime.strptime(date_str, datetime_format)
 
 
-def load_large_diff(filename, new_file_content_str: str, original_file_content_str: str, show_warning: bool = True) -> str:
+def load_large_diff(
+    filename,
+    new_file_content_str: str,
+    original_file_content_str: str,
+    show_warning: bool = True,
+) -> str:
     """
     Generate a patch for a modified file by comparing the original content of the file with the new content provided as
     input.
@@ -500,11 +533,13 @@ def load_large_diff(filename, new_file_content_str: str, original_file_content_s
     """
     patch = ""
     try:
-        diff = difflib.unified_diff(original_file_content_str.splitlines(keepends=True),
-                                    new_file_content_str.splitlines(keepends=True))
+        diff = difflib.unified_diff(
+            original_file_content_str.splitlines(keepends=True),
+            new_file_content_str.splitlines(keepends=True),
+        )
         if get_settings().config.verbosity_level >= 2 and show_warning:
             get_logger().warning(f"File was modified, but no patch was found. Manually creating patch: {filename}.")
-        patch = ''.join(diff)
+        patch = "".join(diff)
     except Exception:
         pass
     return patch
@@ -530,12 +565,12 @@ def update_settings_from_args(args: List[str]) -> List[str]:
     if args:
         for arg in args:
             arg = arg.strip()
-            if arg.startswith('--'):
-                arg = arg.strip('-').strip()
-                vals = arg.split('=', 1)
+            if arg.startswith("--"):
+                arg = arg.strip("-").strip()
+                vals = arg.split("=", 1)
                 if len(vals) != 2:
                     if len(vals) > 2:  # --extended is a valid argument
-                        get_logger().error(f'Invalid argument format: {arg}')
+                        get_logger().error(f"Invalid argument format: {arg}")
                     other_args.append(arg)
                     continue
                 key, value = _fix_key_value(*vals)
@@ -557,60 +592,69 @@ def _fix_key_value(key: str, value: str):
 
 
 def load_yaml(response_text: str, keys_fix_yaml: List[str] = [], first_key="", last_key="") -> dict:
-    response_text = response_text.strip('\n').removeprefix('```yaml').rstrip('`')
+    response_text = response_text.strip("\n").removeprefix("```yaml").rstrip("`")
     try:
         data = yaml.safe_load(response_text)
     except Exception as e:
         get_logger().error(f"Failed to parse AI prediction: {e}")
-        data = try_fix_yaml(response_text, keys_fix_yaml=keys_fix_yaml, first_key=first_key, last_key=last_key)
+        data = try_fix_yaml(
+            response_text,
+            keys_fix_yaml=keys_fix_yaml,
+            first_key=first_key,
+            last_key=last_key,
+        )
     return data
 
 
+def try_fix_yaml(
+    response_text: str,
+    keys_fix_yaml: List[str] = [],
+    first_key="",
+    last_key="",
+) -> dict:
+    response_text_lines = response_text.split("\n")
 
-def try_fix_yaml(response_text: str,
-                 keys_fix_yaml: List[str] = [],
-                 first_key="",
-                 last_key="",) -> dict:
-    response_text_lines = response_text.split('\n')
-
-    keys_yaml = ['relevant line:', 'suggestion content:', 'relevant file:', 'existing code:', 'improved code:']
+    keys_yaml = [
+        "relevant line:",
+        "suggestion content:",
+        "relevant file:",
+        "existing code:",
+        "improved code:",
+    ]
     keys_yaml = keys_yaml + keys_fix_yaml
     # first fallback - try to convert 'relevant line: ...' to relevant line: |-\n        ...'
     response_text_lines_copy = response_text_lines.copy()
     for i in range(0, len(response_text_lines_copy)):
         for key in keys_yaml:
-            if key in response_text_lines_copy[i] and not '|-' in response_text_lines_copy[i]:
-                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f'{key}',
-                                                                                  f'{key} |-\n        ')
+            if key in response_text_lines_copy[i] and not "|-" in response_text_lines_copy[i]:
+                response_text_lines_copy[i] = response_text_lines_copy[i].replace(f"{key}", f"{key} |-\n        ")
     try:
-        data = yaml.safe_load('\n'.join(response_text_lines_copy))
+        data = yaml.safe_load("\n".join(response_text_lines_copy))
         get_logger().info(f"Successfully parsed AI prediction after adding |-\n")
         return data
     except:
         get_logger().info(f"Failed to parse AI prediction after adding |-\n")
 
     # second fallback - try to extract only range from first ```yaml to ````
-    snippet_pattern = r'```(yaml)?[\s\S]*?```'
-    snippet = re.search(snippet_pattern, '\n'.join(response_text_lines_copy))
+    snippet_pattern = r"```(yaml)?[\s\S]*?```"
+    snippet = re.search(snippet_pattern, "\n".join(response_text_lines_copy))
     if snippet:
         snippet_text = snippet.group()
         try:
-            data = yaml.safe_load(snippet_text.removeprefix('```yaml').rstrip('`'))
+            data = yaml.safe_load(snippet_text.removeprefix("```yaml").rstrip("`"))
             get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
             return data
         except:
             pass
 
-
     # third fallback - try to remove leading and trailing curly brackets
-    response_text_copy = response_text.strip().rstrip().removeprefix('{').removesuffix('}').rstrip(':\n')
+    response_text_copy = response_text.strip().rstrip().removeprefix("{").removesuffix("}").rstrip(":\n")
     try:
         data = yaml.safe_load(response_text_copy)
         get_logger().info(f"Successfully parsed AI prediction after removing curly brackets")
         return data
     except:
         pass
-
 
     # forth fallback - try to extract yaml snippet by 'first_key' and 'last_key'
     # note that 'last_key' can be in practice a key that is not the last key in the yaml snippet.
@@ -620,10 +664,10 @@ def try_fix_yaml(response_text: str,
         if index_start == -1:
             index_start = response_text.find(f"{first_key}:")
         index_last_code = response_text.rfind(f"{last_key}:")
-        index_end = response_text.find("\n\n", index_last_code) # look for newlines after last_key
+        index_end = response_text.find("\n\n", index_last_code)  # look for newlines after last_key
         if index_end == -1:
             index_end = len(response_text)
-        response_text_copy = response_text[index_start:index_end].strip().strip('```yaml').strip('`').strip()
+        response_text_copy = response_text[index_start:index_end].strip().strip("```yaml").strip("`").strip()
         try:
             data = yaml.safe_load(response_text_copy)
             get_logger().info(f"Successfully parsed AI prediction after extracting yaml snippet")
@@ -631,11 +675,10 @@ def try_fix_yaml(response_text: str,
         except:
             pass
 
-
     # fifth fallback - try to remove last lines
     data = {}
     for i in range(1, len(response_text_lines)):
-        response_text_lines_tmp = '\n'.join(response_text_lines[:-i])
+        response_text_lines_tmp = "\n".join(response_text_lines[:-i])
         try:
             data = yaml.safe_load(response_text_lines_tmp)
             get_logger().info(f"Successfully parsed AI prediction after removing {i} lines")
@@ -648,10 +691,17 @@ def set_custom_labels(variables, git_provider=None):
     if not get_settings().config.enable_custom_labels:
         return
 
-    labels = get_settings().get('custom_labels', {})
+    labels = get_settings().get("custom_labels", {})
     if not labels:
         # set default labels
-        labels = ['Bug fix', 'Tests', 'Bug fix with tests', 'Enhancement', 'Documentation', 'Other']
+        labels = [
+            "Bug fix",
+            "Tests",
+            "Bug fix with tests",
+            "Enhancement",
+            "Documentation",
+            "Other",
+        ]
         labels_list = "\n      - ".join(labels) if labels else ""
         labels_list = f"      - {labels_list}" if labels_list else ""
         variables["custom_labels"] = labels_list
@@ -662,12 +712,13 @@ def set_custom_labels(variables, git_provider=None):
     counter = 0
     labels_minimal_to_labels_dict = {}
     for k, v in labels.items():
-        description = "'" + v['description'].strip('\n').replace('\n', '\\n') + "'"
+        description = "'" + v["description"].strip("\n").replace("\n", "\\n") + "'"
         # variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = '{k}' # {description}"
         variables["custom_labels_class"] += f"\n    {k.lower().replace(' ', '_')} = {description}"
-        labels_minimal_to_labels_dict[k.lower().replace(' ', '_')] = k
+        labels_minimal_to_labels_dict[k.lower().replace(" ", "_")] = k
         counter += 1
     variables["labels_minimal_to_labels_dict"] = labels_minimal_to_labels_dict
+
 
 def get_user_labels(current_labels: List[str] = None):
     """
@@ -678,7 +729,13 @@ def get_user_labels(current_labels: List[str] = None):
             current_labels = []
         user_labels = []
         for label in current_labels:
-            if label.lower() in ['bug fix', 'tests', 'enhancement', 'documentation', 'other']:
+            if label.lower() in [
+                "bug fix",
+                "tests",
+                "enhancement",
+                "documentation",
+                "other",
+            ]:
                 continue
             if get_settings().config.enable_custom_labels:
                 if label in get_settings().custom_labels:
@@ -708,14 +765,22 @@ def get_max_tokens(model):
     elif settings.config.custom_model_max_tokens > 0:
         max_tokens_model = settings.config.custom_model_max_tokens
     else:
-        raise Exception(f"Ensure {model} is defined in MAX_TOKENS in ./pr_assistant/algo/__init__.py or set a positive value for it in config.custom_model_max_tokens")
+        raise Exception(
+            f"Ensure {model} is defined in MAX_TOKENS in ./pr_assistant/algo/__init__.py or set a positive value for it in config.custom_model_max_tokens"
+        )
 
     if settings.config.max_model_tokens and settings.config.max_model_tokens > 0:
         max_tokens_model = min(settings.config.max_model_tokens, max_tokens_model)
     return max_tokens_model
 
 
-def clip_tokens(text: str, max_tokens: int, add_three_dots=True, num_input_tokens=None, delete_last_line=False) -> str:
+def clip_tokens(
+    text: str,
+    max_tokens: int,
+    add_three_dots=True,
+    num_input_tokens=None,
+    delete_last_line=False,
+) -> str:
     """
     Clip the number of tokens in a string to a maximum number of tokens.
 
@@ -748,36 +813,38 @@ def clip_tokens(text: str, max_tokens: int, add_three_dots=True, num_input_token
         if num_output_chars > 0:
             clipped_text = text[:num_output_chars]
             if delete_last_line:
-                clipped_text = clipped_text.rsplit('\n', 1)[0]
+                clipped_text = clipped_text.rsplit("\n", 1)[0]
             if add_three_dots:
                 clipped_text += "\n...(truncated)"
-        else: # if the text is empty
-            clipped_text =  ""
+        else:  # if the text is empty
+            clipped_text = ""
 
         return clipped_text
     except Exception as e:
         get_logger().warning(f"Failed to clip tokens: {e}")
         return text
 
+
 def replace_code_tags(text):
     """
     Replace odd instances of ` with <code> and even instances of ` with </code>
     """
-    parts = text.split('`')
+    parts = text.split("`")
     for i in range(1, len(parts), 2):
-        parts[i] = '<code>' + parts[i] + '</code>'
-    return ''.join(parts)
+        parts[i] = "<code>" + parts[i] + "</code>"
+    return "".join(parts)
 
 
-def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
-                                              relevant_file: str,
-                                              relevant_line_in_file: str,
-                                              absolute_position: int = None) -> Tuple[int, int]:
+def find_line_number_of_relevant_line_in_file(
+    diff_files: List[FilePatchInfo],
+    relevant_file: str,
+    relevant_line_in_file: str,
+    absolute_position: int = None,
+) -> Tuple[int, int]:
     position = -1
     if absolute_position is None:
         absolute_position = -1
-    re_hunk_header = re.compile(
-        r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
+    re_hunk_header = re.compile(r"^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@[ ]?(.*)")
 
     for file in diff_files:
         if file.filename and (file.filename.strip() == relevant_file):
@@ -785,14 +852,14 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
             patch_lines = patch.splitlines()
             delta = 0
             start1, size1, start2, size2 = 0, 0, 0, 0
-            if absolute_position != -1: # matching absolute to relative
+            if absolute_position != -1:  # matching absolute to relative
                 for i, line in enumerate(patch_lines):
                     # new hunk
-                    if line.startswith('@@'):
+                    if line.startswith("@@"):
                         delta = 0
                         match = re_hunk_header.match(line)
                         start1, size1, start2, size2 = map(int, match.groups()[:4])
-                    elif not line.startswith('-'):
+                    elif not line.startswith("-"):
                         delta += 1
 
                     #
@@ -803,36 +870,36 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                         break
             else:
                 # try to find the line in the patch using difflib, with some margin of error
-                matches_difflib: list[str | Any] = difflib.get_close_matches(relevant_line_in_file,
-                                                                             patch_lines, n=3, cutoff=0.93)
-                if len(matches_difflib) == 1 and matches_difflib[0].startswith('+'):
+                matches_difflib: list[str | Any] = difflib.get_close_matches(
+                    relevant_line_in_file, patch_lines, n=3, cutoff=0.93
+                )
+                if len(matches_difflib) == 1 and matches_difflib[0].startswith("+"):
                     relevant_line_in_file = matches_difflib[0]
 
-
                 for i, line in enumerate(patch_lines):
-                    if line.startswith('@@'):
+                    if line.startswith("@@"):
                         delta = 0
                         match = re_hunk_header.match(line)
                         start1, size1, start2, size2 = map(int, match.groups()[:4])
-                    elif not line.startswith('-'):
+                    elif not line.startswith("-"):
                         delta += 1
 
-                    if relevant_line_in_file in line and line[0] != '-':
+                    if relevant_line_in_file in line and line[0] != "-":
                         position = i
                         absolute_position = start2 + delta - 1
                         break
 
-                if position == -1 and relevant_line_in_file[0] == '+':
+                if position == -1 and relevant_line_in_file[0] == "+":
                     no_plus_line = relevant_line_in_file[1:].lstrip()
                     for i, line in enumerate(patch_lines):
-                        if line.startswith('@@'):
+                        if line.startswith("@@"):
                             delta = 0
                             match = re_hunk_header.match(line)
                             start1, size1, start2, size2 = map(int, match.groups()[:4])
-                        elif not line.startswith('-'):
+                        elif not line.startswith("-"):
                             delta += 1
 
-                        if no_plus_line in line and line[0] != '-':
+                        if no_plus_line in line and line[0] != "-":
                             # The model might add a '+' to the beginning of the relevant_line_in_file even if originally
                             # it's a context line
                             position = i
@@ -840,26 +907,27 @@ def find_line_number_of_relevant_line_in_file(diff_files: List[FilePatchInfo],
                             break
     return position, absolute_position
 
+
 def validate_and_await_rate_limit(rate_limit_status=None, git_provider=None, get_rate_limit_status_func=None):
     if git_provider and not rate_limit_status:
-        rate_limit_status = {'resources': git_provider.github_client.get_rate_limit().raw_data}
+        rate_limit_status = {"resources": git_provider.github_client.get_rate_limit().raw_data}
 
     if not rate_limit_status:
         rate_limit_status = get_rate_limit_status_func()
     # validate that the rate limit is not exceeded
     is_rate_limit = False
-    for key, value in rate_limit_status['resources'].items():
-        if value['remaining'] == 0:
+    for key, value in rate_limit_status["resources"].items():
+        if value["remaining"] == 0:
             print(f"key: {key}, value: {value}")
             is_rate_limit = True
-            sleep_time_sec = value['reset'] - datetime.now().timestamp()
+            sleep_time_sec = value["reset"] - datetime.now().timestamp()
             sleep_time_hour = sleep_time_sec / 3600.0
             print(f"Rate limit exceeded. Sleeping for {sleep_time_hour} hours")
             if sleep_time_sec > 0:
-                time.sleep(sleep_time_sec+1)
+                time.sleep(sleep_time_sec + 1)
 
             if git_provider:
-                rate_limit_status = {'resources': git_provider.github_client.get_rate_limit().raw_data}
+                rate_limit_status = {"resources": git_provider.github_client.get_rate_limit().raw_data}
             else:
                 rate_limit_status = get_rate_limit_status_func()
 
@@ -868,6 +936,7 @@ def validate_and_await_rate_limit(rate_limit_status=None, git_provider=None, get
 
 def get_largest_component(pr_url):
     from pr_assistant.tools.pr_analyzer import PRAnalyzer
+
     publish_output = get_settings().config.publish_output
     get_settings().config.publish_output = False  # disable publish output
     analyzer = PRAnalyzer(pr_url)
@@ -879,8 +948,8 @@ def get_largest_component(pr_url):
     for file in methods_dict_files:
         for method in methods_dict_files[file]:
             try:
-                if methods_dict_files[file][method]['num_plus_lines'] > max_lines_changed:
-                    max_lines_changed = methods_dict_files[file][method]['num_plus_lines']
+                if methods_dict_files[file][method]["num_plus_lines"] > max_lines_changed:
+                    max_lines_changed = methods_dict_files[file][method]["num_plus_lines"]
                     file_b = file
                     component_name_b = method
             except:
@@ -891,26 +960,39 @@ def get_largest_component(pr_url):
     else:
         return None, None
 
+
 def github_action_output(output_data: dict, key_name: str):
     try:
-        if not get_settings().get('github_action_config.enable_output', False):
+        if not get_settings().get("github_action_config.enable_output", False):
             return
 
         key_data = output_data.get(key_name, {})
-        with open(os.environ['GITHUB_OUTPUT'], 'a') as fh:
-            print(f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}", file=fh)
+        with open(os.environ["GITHUB_OUTPUT"], "a") as fh:
+            print(
+                f"{key_name}={json.dumps(key_data, indent=None, ensure_ascii=False)}",
+                file=fh,
+            )
     except Exception as e:
         get_logger().error(f"Failed to write to GitHub Action output: {e}")
     return
 
 
 def show_relevant_configurations(relevant_section: str) -> str:
-    forbidden_keys = ['ai_disclaimer', 'ai_disclaimer_title', 'ANALYTICS_FOLDER', 'secret_provider',
-                      'trial_prefix_message', 'no_eligible_message', 'identity_provider', 'ALLOWED_REPOS','APP_NAME']
+    forbidden_keys = [
+        "ai_disclaimer",
+        "ai_disclaimer_title",
+        "ANALYTICS_FOLDER",
+        "secret_provider",
+        "trial_prefix_message",
+        "no_eligible_message",
+        "identity_provider",
+        "ALLOWED_REPOS",
+        "APP_NAME",
+    ]
 
     markdown_text = ""
     markdown_text += "\n<hr>\n<details> <summary><strong>🛠️ Relevant configurations:</strong></summary> \n\n"
-    markdown_text +="<br>These are the relevant [configurations](https://github.com/Khulnasoft/pr-assistant/blob/main/pr_assistant/settings/configuration.toml) for this tool:\n\n"
+    markdown_text += "<br>These are the relevant [configurations](https://github.com/Khulnasoft/pr-assistant/blob/main/pr_assistant/settings/configuration.toml) for this tool:\n\n"
     markdown_text += f"**[config**]\n```yaml\n\n"
     for key, value in get_settings().config.items():
         if key in forbidden_keys:
@@ -926,10 +1008,11 @@ def show_relevant_configurations(relevant_section: str) -> str:
     markdown_text += "\n</details>\n"
     return markdown_text
 
+
 def is_value_no(value):
     if not value:
         return True
     value_str = str(value).strip().lower()
-    if value_str == 'no' or value_str == 'none' or value_str == 'false':
+    if value_str == "no" or value_str == "none" or value_str == "false":
         return True
     return False

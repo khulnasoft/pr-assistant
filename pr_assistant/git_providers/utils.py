@@ -3,11 +3,11 @@ import os
 import tempfile
 
 from dynaconf import Dynaconf
+from starlette_context import context
 
 from pr_assistant.config_loader import get_settings
 from pr_assistant.git_providers import get_git_provider, get_git_provider_with_context
 from pr_assistant.log import get_logger
-from starlette_context import context
 
 
 def apply_repo_settings(pr_url):
@@ -29,7 +29,7 @@ def apply_repo_settings(pr_url):
 
             if repo_settings:
                 repo_settings_file = None
-                fd, repo_settings_file = tempfile.mkstemp(suffix='.toml')
+                fd, repo_settings_file = tempfile.mkstemp(suffix=".toml")
                 os.write(fd, repo_settings)
                 new_settings = Dynaconf(settings_files=[repo_settings_file])
                 for section, contents in new_settings.as_dict().items():
@@ -46,4 +46,7 @@ def apply_repo_settings(pr_url):
                 try:
                     os.remove(repo_settings_file)
                 except Exception as e:
-                    get_logger().error(f"Failed to remove temporary settings file {repo_settings_file}", e)
+                    get_logger().error(
+                        f"Failed to remove temporary settings file {repo_settings_file}",
+                        e,
+                    )

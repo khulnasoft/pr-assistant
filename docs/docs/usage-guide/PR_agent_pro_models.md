@@ -2,7 +2,7 @@
 
 The default models used by PR-Assistant Pro are OpenAI's GPT-4 models. We use a combination of GPT-4-Turbo and GPT-4o to strike a balance between speed and quality.
 
-However, users can change the model used by PR-Assistant Pro to Claude-3.5-sonnet, which also excels in code tasks. 
+However, users can change the model used by PR-Assistant Pro to Claude-3.5-sonnet, which also excels in code tasks.
 To do so, add the following to your [configuration](https://pr-assistant-docs.khulnasoft.com/usage-guide/configuration_options/) file:
 
 ```

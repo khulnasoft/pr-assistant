@@ -1,0 +1,6 @@
+version: 2
+update:
+  - package-echosystem: "github-actions"
+    directory: "/"
+    schedules:
+      interval: "daily"

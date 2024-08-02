@@ -105,7 +105,7 @@ git clone https://github.com/Khulnasoft/pr-assistant.git
 ```
 
 5) Copy the secrets template file and fill in the following:
-    
+
 ```
 cp pr_assistant/settings/.secrets_template.toml pr_assistant/settings/.secrets.toml
 # Edit .secrets.toml file
@@ -134,7 +134,7 @@ cp pr_assistant/settings/.secrets_template.toml pr_assistant/settings/.secrets.t
                 - mountPath: /app/pr_assistant/settings_prod
                   name: settings-volume
     ```
-    
+
     > Another option is to set the secrets as environment variables in your deployment environment, for example `OPENAI.KEY` and `GITHUB.USER_TOKEN`.
 
 6) Build a Docker image for the app and optionally push it to a Docker repository. We'll use Dockerhub as an example:

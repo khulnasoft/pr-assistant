@@ -1,6 +1,6 @@
 # Usage guide
 
-This page provides a detailed guide on how to use PR-Assistant. 
+This page provides a detailed guide on how to use PR-Assistant.
 It includes information on how to adjust PR-Assistant configurations, define which tools will run automatically, and other advanced configurations.
 
 

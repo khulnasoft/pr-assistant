@@ -88,7 +88,7 @@ Significant documentation updates (see [Installation Guide](https://github.com/K
 - khulnasoft/pr-assistant:0.7-gitlab_webhook
 - khulnasoft/pr-assistant:0.7-github_polling
 - khulnasoft/pr-assistant:0.7-github_action
- 
+
 ### Added::Algo
 - New tool /similar_issue - Currently on GitHub app and CLI: indexes the issues in the repo, find the most similar issues to the target issue.
 - Describe markers: Empower the /describe tool with a templating capability (see more details in https://github.com/Khulnasoft/pr-assistant/pull/273).

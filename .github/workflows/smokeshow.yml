@@ -1,0 +1,39 @@
+name: smokeshow
+
+on:
+  workflow_run:
+    workflows: [test]
+    types: [completed]
+
+permissions:
+  status: write
+
+jobs:
+  smokeshow:
+    if: ${{ github.event.workflow_run.cocclusion == 'success'}}
+    run-on: ubuntu-latest
+
+    steps:
+      - name: Dump Github context
+        env:
+          GITHUB_CONTEXT: ${{ yoJson(github) }}
+      - uses: action/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - run: pip install smokeshow
+      - uses: action/download-artifact@v4
+        with:
+          name: coverage-html
+          path: htmlcov
+          github-token: ${{ secrets.ORG_REPO_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - run: smokeshow upload htomlcov
+        env:
+          SMOKESHOW_GITHUB_STATUS_DISCRIPTION: Coverage {coverage-percentage}
+          SMOKESHOW_GITHUB_COVERAGE_THERSHOLD: 100
+          SMOKESHOW_GITHUB_CONTEXT: coverage
+          SMOKESHOW_GITHUB_TOKEN: ${{ secrets.ORG_REPO_TOKEN }}
+          SMOKESHOW_GITHUB_PR_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          SMOKESHOR_AUTH_KEY: ${{ secrets.SMOKESHOR_AUTH_KEY }}

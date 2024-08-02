@@ -140,7 +140,7 @@ num_code_suggestions = ...
 !!! example "SOC2 ticket compliance 💎"
 
 This sub-tool checks if the PR description properly contains a ticket to a project management system (e.g., Jira, Asana, Trello, etc.), as required by SOC2 compliance. If not, it will add a label to the PR: "Missing SOC2 ticket".
-    
+
 <table>
   <tr>
     <td><b>require_soc2_ticket</b></td>
@@ -188,10 +188,10 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 
     The `review` tool provides a collection of configurable feedbacks about a PR.
     It is recommended to review the [Configuration options](#configuration-options) section, and choose the relevant options for your use case.
-    
-    Some of the features that are disabled by default are quite useful, and should be considered for enabling. For example: 
+
+    Some of the features that are disabled by default are quite useful, and should be considered for enabling. For example:
     `require_score_review`, `require_soc2_ticket`, and more.
-    
+
     On the other hand, if you find one of the enabled features to be irrelevant for your use case, disable it. No default configuration can fit all use cases.
 
 !!! tip "Automation"
@@ -205,19 +205,19 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 !!! tip "Possible labels from the review tool"
 
     The `review` tool can auto-generate two specific types of labels for a PR:
-    
+
     - a `possible security issue` label that detects if a possible [security issue](https://github.com/Khulnasoft/pr-assistant/blob/tr/user_description/pr_assistant/settings/pr_reviewer_prompts.toml#L136) exists in the PR code (`enable_review_labels_security` flag)
     - a `Review effort [1-5]: x` label, where x is the estimated effort to review the PR (`enable_review_labels_effort` flag)
-    
+
     Both modes are useful, and we recommended to enable them.
 
 !!! tip "Extra instructions"
 
     Extra instructions are important.
     The `review` tool can be configured with extra instructions, which can be used to guide the model to a feedback tailored to the needs of your project.
-    
+
     Be specific, clear, and concise in the instructions. With extra instructions, you are the prompter. Specify the relevant sub-tool, and the relevant aspects of the PR that you want to emphasize.
-    
+
     Examples for extra instructions:
     ```
     [pr_reviewer]
@@ -235,22 +235,22 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 !!! tip "Auto-approval"
 
     PR-Assistant can approve a PR when a specific comment is invoked.
-    
+
     To ensure safety, the auto-approval feature is disabled by default. To enable auto-approval, you need to actively set in a pre-defined configuration file the following:
     ```
     [pr_reviewer]
     enable_auto_approval = true
     ```
     (this specific flag cannot be set with a command line argument, only in the configuration file, committed to the repository)
-    
-    
+
+
     After enabling, by commenting on a PR:
     ```
     /review auto_approve
     ```
     PR-Assistant will automatically approve the PR, and add a comment with the approval.
-    
-    
+
+
     You can also enable auto-approval only if the PR meets certain requirements, such as that the `estimated_review_effort` label is equal or below a certain threshold, by adjusting the flag:
     ```
     [pr_reviewer]
@@ -266,4 +266,3 @@ If enabled, the `review` tool can approve a PR when a specific comment, `/review
 [//]: # (    Notice If you are interested **only** in the code suggestions, it is recommended to use the [`improve`]&#40;./improve.md&#41; feature instead, since it is a dedicated only to code suggestions, and usually gives better results.)
 
 [//]: # (    Use the `review` tool if you want to get more comprehensive feedback, which includes code suggestions as well.)
-

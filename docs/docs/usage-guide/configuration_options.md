@@ -20,7 +20,7 @@ In terms of precedence, wiki configurations will override local configurations, 
 
 `Platforms supported: GitHub, GitLab`
 
-With PR-Assistant-Pro, you can set configurations by creating a page called `.pr_assistant.toml` in the [wiki](https://github.com/Khulnasoft/pr-assistant/wiki/pr_assistant.toml) of the repo. 
+With PR-Assistant-Pro, you can set configurations by creating a page called `.pr_assistant.toml` in the [wiki](https://github.com/Khulnasoft/pr-assistant/wiki/pr_assistant.toml) of the repo.
 The advantage of this method is that it allows to set configurations without needing to commit new content to the repo - just edit the wiki page and **save**.
 
 

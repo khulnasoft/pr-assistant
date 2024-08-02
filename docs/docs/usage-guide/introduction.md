@@ -10,4 +10,3 @@ Specifically, CLI commands can be issued by invoking a pre-built [docker image](
 
 For online usage, you will need to setup either a [GitHub App](https://pr-assistant-docs.khulnasoft.com/installation/github/#run-as-a-github-app) or a [GitHub Action](https://pr-assistant-docs.khulnasoft.com/installation/github/#run-as-a-github-action) (GitHub), a [GitLab webhook](https://pr-assistant-docs.khulnasoft.com/installation/gitlab/#run-a-gitlab-webhook-server) (GitLab), or a [BitBucket App](https://pr-assistant-docs.khulnasoft.com/installation/bitbucket/#run-using-khulnasoft-hosted-bitbucket-app) (BitBucket).
 These platforms also enable to run PR-Assistant specific tools automatically when a new PR is opened, or on each push to a branch.
-

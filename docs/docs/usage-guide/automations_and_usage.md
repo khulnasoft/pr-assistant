@@ -66,7 +66,7 @@ Any configuration value in [configuration file](https://github.com/Khulnasoft/pr
 
 ### GitHub app automatic tools when a new PR is opened
 
-The [github_app](https://github.com/Khulnasoft/pr-assistant/blob/main/pr_assistant/settings/configuration.toml#L108) section defines GitHub app specific configurations.  
+The [github_app](https://github.com/Khulnasoft/pr-assistant/blob/main/pr_assistant/settings/configuration.toml#L108) section defines GitHub app specific configurations.
 
 The configuration parameter `pr_commands` defines the list of tools that will be **run automatically** when a new PR is opened.
 ```
@@ -77,10 +77,10 @@ pr_commands = [
     "/improve",
 ]
 ```
-This means that when a new PR is opened/reopened or marked as ready for review, PR-Assistant will run the `describe`, `review` and `improve` tools.  
+This means that when a new PR is opened/reopened or marked as ready for review, PR-Assistant will run the `describe`, `review` and `improve` tools.
 For the `review` tool, for example, the `num_code_suggestions` parameter will be set to 0.
 
-You can override the default tool parameters by using one the three options for a [configuration file](https://khulnasoft.github.io/Docs-PR-Assistant/usage-guide/#configuration-options): **wiki**, **local**, or **global**. 
+You can override the default tool parameters by using one the three options for a [configuration file](https://khulnasoft.github.io/Docs-PR-Assistant/usage-guide/#configuration-options): **wiki**, **local**, or **global**.
 For example, if your local `.pr_assistant.toml` file contains:
 ```
 [pr_description]
@@ -105,7 +105,7 @@ will ignore PRs with titles that start with "Auto" or contain the word "ignore".
 
 In addition to running automatic tools when a PR is opened, the GitHub app can also respond to new code that is pushed to an open PR.
 
-The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+The configuration toggle `handle_push_trigger` can be used to enable this feature.
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the PR.
 ```
 [github_app]
@@ -119,7 +119,7 @@ This means that when new code is pushed to the PR, the PR-Assistant will run the
 
 ## GitHub Action
 `GitHub Action` is a different way to trigger PR-Assistant tools, and uses a different configuration mechanism than `GitHub App`.<br>
-You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_assistant.yml` file. 
+You can configure settings for `GitHub Action` by adding environment variables under the env section in `.github/workflows/pr_assistant.yml` file.
 Specifically, start by setting the following environment variables:
 ```yaml
       env:
@@ -132,7 +132,7 @@ Specifically, start by setting the following environment variables:
 `github_action_config.auto_review`, `github_action_config.auto_describe` and `github_action_config.auto_improve` are used to enable/disable automatic tools that run when a new PR is opened.
 If not set, the default configuration is for all three tools to run automatically when a new PR is opened.
 
-`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`). 
+`github_action_config.enable_output` are used to enable/disable github actions [output parameter](https://docs.github.com/en/actions/creating-actions/metadata-syntax-for-github-actions#outputs-for-docker-container-and-javascript-actions) (default is `true`).
 Review result is output as JSON to `steps.{step-id}.outputs.review` property.
 The JSON structure is equivalent to the yaml data structure defined in [pr_reviewer_prompts.toml](https://github.com/idubnori/pr-assistant/blob/main/pr_assistant/settings/pr_reviewer_prompts.toml).
 
@@ -157,7 +157,7 @@ pr_commands = [
 ```
 
 the GitLab webhook can also respond to new code that is pushed to an open MR.
-The configuration toggle `handle_push_trigger` can be used to enable this feature.  
+The configuration toggle `handle_push_trigger` can be used to enable this feature.
 The configuration parameter `push_commands` defines the list of tools that will be **run automatically** when new code is pushed to the MR.
 ```
 [gitlab]
@@ -207,11 +207,11 @@ git_provider="azure"
 ```
 
 Azure DevOps provider supports [PAT token](https://learn.microsoft.com/en-us/azure/devops/organizations/accounts/use-personal-access-tokens-to-authenticate?view=azure-devops&tabs=Windows) or [DefaultAzureCredential](https://learn.microsoft.com/en-us/azure/developer/python/sdk/authentication-overview#authentication-in-server-environments) authentication.
-PAT is faster to create, but has build in expiration date, and will use the user identity for API calls. 
+PAT is faster to create, but has build in expiration date, and will use the user identity for API calls.
 Using DefaultAzureCredential you can use managed identity or Service principle, which are more secure and will create separate ADO user identity (via AAD) to the agent.
 
-If PAT was chosen, you can assign the value in .secrets.toml. 
-If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly, 
+If PAT was chosen, you can assign the value in .secrets.toml.
+If DefaultAzureCredential was chosen, you can assigned the additional env vars like AZURE_CLIENT_SECRET directly,
 or use managed identity/az cli (for local development) without any additional configuration.
 in any case, 'org' value must be assigned in .secrets.toml:
 ```

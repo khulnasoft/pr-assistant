@@ -1,10 +1,12 @@
 import os
-import requests
+
 import boto3
 import litellm
 import openai
+import requests
 from litellm import acompletion
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
+
 from pr_assistant.algo.ai_handlers.base_ai_handler import BaseAiHandler
 from pr_assistant.config_loader import get_settings
 from pr_assistant.log import get_logger
@@ -30,10 +32,12 @@ class LiteLLMAIHandler(BaseAiHandler):
         if get_settings().get("OPENAI.KEY", None):
             openai.api_key = get_settings().openai.key
             litellm.openai_key = get_settings().openai.key
-        elif 'OPENAI_API_KEY' not in os.environ:
+        elif "OPENAI_API_KEY" not in os.environ:
             litellm.api_key = "dummy_key"
         if get_settings().get("aws.AWS_ACCESS_KEY_ID"):
-            assert get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME, "AWS credentials are incomplete"
+            assert (
+                get_settings().aws.AWS_SECRET_ACCESS_KEY and get_settings().aws.AWS_REGION_NAME
+            ), "AWS credentials are incomplete"
             os.environ["AWS_ACCESS_KEY_ID"] = get_settings().aws.AWS_ACCESS_KEY_ID
             os.environ["AWS_SECRET_ACCESS_KEY"] = get_settings().aws.AWS_SECRET_ACCESS_KEY
             os.environ["AWS_REGION_NAME"] = get_settings().aws.AWS_REGION_NAME
@@ -64,7 +68,7 @@ class LiteLLMAIHandler(BaseAiHandler):
             litellm.replicate_key = get_settings().replicate.key
         if get_settings().get("HUGGINGFACE.KEY", None):
             litellm.huggingface_key = get_settings().huggingface.key
-        if get_settings().get("HUGGINGFACE.API_BASE", None) and 'huggingface' in get_settings().config.model:
+        if get_settings().get("HUGGINGFACE.API_BASE", None) and "huggingface" in get_settings().config.model:
             litellm.api_base = get_settings().huggingface.api_base
             self.api_base = get_settings().huggingface.api_base
         if get_settings().get("OLLAMA.API_BASE", None):
@@ -74,19 +78,18 @@ class LiteLLMAIHandler(BaseAiHandler):
             self.repetition_penalty = float(get_settings().huggingface.repetition_penalty)
         if get_settings().get("VERTEXAI.VERTEX_PROJECT", None):
             litellm.vertex_project = get_settings().vertexai.vertex_project
-            litellm.vertex_location = get_settings().get(
-                "VERTEXAI.VERTEX_LOCATION", None
-            )
+            litellm.vertex_location = get_settings().get("VERTEXAI.VERTEX_LOCATION", None)
+
     def prepare_logs(self, response, system, user, resp, finish_reason):
         response_log = response.dict().copy()
-        response_log['system'] = system
-        response_log['user'] = user
-        response_log['output'] = resp
-        response_log['finish_reason'] = finish_reason
-        if hasattr(self, 'main_pr_language'):
-            response_log['main_pr_language'] = self.main_pr_language
+        response_log["system"] = system
+        response_log["user"] = user
+        response_log["output"] = resp
+        response_log["finish_reason"] = finish_reason
+        if hasattr(self, "main_pr_language"):
+            response_log["main_pr_language"] = self.main_pr_language
         else:
-            response_log['main_pr_language'] = 'unknown'
+            response_log["main_pr_language"] = "unknown"
         return response_log
 
     @property
@@ -97,16 +100,28 @@ class LiteLLMAIHandler(BaseAiHandler):
         return get_settings().get("OPENAI.DEPLOYMENT_ID", None)
 
     @retry(
-        retry=retry_if_exception_type((openai.APIError, openai.APIConnectionError, openai.APITimeoutError)), # No retry on RateLimitError
-        stop=stop_after_attempt(OPENAI_RETRIES)
+        retry=retry_if_exception_type(
+            (openai.APIError, openai.APIConnectionError, openai.APITimeoutError)
+        ),  # No retry on RateLimitError
+        stop=stop_after_attempt(OPENAI_RETRIES),
     )
-    async def chat_completion(self, model: str, system: str, user: str, temperature: float = 0.2, img_path: str = None):
+    async def chat_completion(
+        self,
+        model: str,
+        system: str,
+        user: str,
+        temperature: float = 0.2,
+        img_path: str = None,
+    ):
         try:
             resp, finish_reason = None, None
             deployment_id = self.deployment_id
             if self.azure:
-                model = 'azure/' + model
-            messages = [{"role": "system", "content": system}, {"role": "user", "content": user}]
+                model = "azure/" + model
+            messages = [
+                {"role": "system", "content": system},
+                {"role": "user", "content": user},
+            ]
             if img_path:
                 try:
                     # check if the image link is alive
@@ -118,8 +133,10 @@ class LiteLLMAIHandler(BaseAiHandler):
                 except Exception as e:
                     get_logger().error(f"Error fetching image: {img_path}", e)
                     return f"Error fetching image: {img_path}", "error"
-                messages[1]["content"] = [{"type": "text", "text": messages[1]["content"]},
-                                          {"type": "image_url", "image_url": {"url": img_path}}]
+                messages[1]["content"] = [
+                    {"type": "text", "text": messages[1]["content"]},
+                    {"type": "image_url", "image_url": {"url": img_path}},
+                ]
 
             kwargs = {
                 "model": model,
@@ -149,16 +166,16 @@ class LiteLLMAIHandler(BaseAiHandler):
         except (openai.APIError, openai.APITimeoutError) as e:
             get_logger().error("Error during OpenAI inference: ", e)
             raise
-        except (openai.RateLimitError) as e:
+        except openai.RateLimitError as e:
             get_logger().error("Rate limit error during OpenAI inference: ", e)
             raise
-        except (Exception) as e:
+        except Exception as e:
             get_logger().error("Unknown error during OpenAI inference: ", e)
             raise openai.APIError from e
         if response is None or len(response["choices"]) == 0:
             raise openai.APIError
         else:
-            resp = response["choices"][0]['message']['content']
+            resp = response["choices"][0]["message"]["content"]
             finish_reason = response["choices"][0]["finish_reason"]
             get_logger().debug(f"\nAI response:\n{resp}")
 
